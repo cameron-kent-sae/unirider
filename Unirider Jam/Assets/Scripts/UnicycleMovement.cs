@@ -41,7 +41,7 @@ public class UnicycleMovement : MonoBehaviour
         {
             if (Input.GetButtonDown("Jump") && rb)
             {
-                rb.AddForce(transform.right * jumpForce);
+                rb.AddForce(transform.up * jumpForce);
 
                 currentNumberOfJumps--;
             }
@@ -56,18 +56,18 @@ public class UnicycleMovement : MonoBehaviour
 
             if (rb)
             {
-                rb.velocity.Set(rb.velocity.x, 0, rb.velocity.z);
-                rb.AddForce(transform.up * movementSpeed);
+                //rb.velocity.Set(rb.velocity.x, 0, rb.velocity.z);
+                rb.AddForce(transform.forward * movementSpeed);
             }
         }
 
         if (Input.GetKey(KeyCode.A))
         {
-            gameObject.transform.Rotate(-Vector3.right * rotationSpeed * Time.deltaTime);
+            gameObject.transform.Rotate(-Vector3.up * rotationSpeed * Time.deltaTime);
         }
         if (Input.GetKey(KeyCode.D))
         {
-            gameObject.transform.Rotate(Vector3.right * rotationSpeed * Time.deltaTime);
+            gameObject.transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
         }
     }
 
@@ -82,8 +82,6 @@ public class UnicycleMovement : MonoBehaviour
 
             isGrounded = true;
 
-            Debug.Log("isGrounded is true");
-
             if (currentNumberOfJumps != numberOfJumps)
             {
                 currentNumberOfJumps = numberOfJumps;
@@ -91,7 +89,8 @@ public class UnicycleMovement : MonoBehaviour
 
             if (rotateTowardsGround)
             {
-                transform.rotation = Quaternion.LookRotation(hit.point, hit.normal);
+                //transform.rotation = Quaternion.LookRotation(hit.normal);
+                transform.rotation = Quaternion.Slerp(transform.rotation, new Quaternion(hit.normal.x, transform.rotation.y, hit.normal.z, transform.rotation.w), 1 * Time.deltaTime);
             }
         }
 
@@ -99,11 +98,14 @@ public class UnicycleMovement : MonoBehaviour
         {
             isGrounded = false;
 
-            Debug.Log("isGrounded is false");
-
-            rb.AddForce(transform.right * gravity);
+            rb.AddForce(Vector3.up * gravity);
 
             Debug.DrawLine(groundCheckPoint.position, new Vector3(groundCheckPoint.position.x, groundCheckPoint.position.y - groundCheckDistance, groundCheckPoint.position.z), Color.green);
+
+            if(transform.rotation.x != 0 || transform.rotation.z != 0)
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation = new Quaternion(0, transform.rotation.y, 0, transform.rotation.w), 1 * Time.deltaTime);
+            }
         }
     }
 }
