@@ -17,6 +17,7 @@ public class UnicycleMovement : MonoBehaviour
     private bool isGrounded;
 
     public Transform groundCheckPoint;
+    public Transform childCycle;
 
     private Rigidbody rb;
 
@@ -57,18 +58,20 @@ public class UnicycleMovement : MonoBehaviour
             if (rb)
             {
                 //rb.velocity.Set(rb.velocity.x, 0, rb.velocity.z);
-                rb.AddForce(transform.forward * movementSpeed);
+                rb.AddForce(childCycle.forward * movementSpeed);
             }
         }
 
+        
         if (Input.GetKey(KeyCode.A))
         {
-            gameObject.transform.Rotate(-Vector3.up * rotationSpeed * Time.deltaTime);
+            childCycle.transform.Rotate(-Vector3.up * rotationSpeed * Time.deltaTime);
         }
         if (Input.GetKey(KeyCode.D))
         {
-            gameObject.transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
+            childCycle.transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
         }
+        
     }
 
     void GroundRotate()
@@ -89,8 +92,10 @@ public class UnicycleMovement : MonoBehaviour
 
             if (rotateTowardsGround)
             {
-                //transform.rotation = Quaternion.LookRotation(hit.normal);
-                transform.rotation = Quaternion.Slerp(transform.rotation, new Quaternion(hit.normal.x, transform.rotation.y, hit.normal.z, transform.rotation.w), 1 * Time.deltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, 0.01f);
+
+                Debug.Log("Hit Normal: " + hit.normal);
+                Debug.Log("Unicycle Transform: " + transform.rotation);
             }
         }
 
