@@ -94,8 +94,8 @@ public class UnicycleMovement : MonoBehaviour
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, 0.01f);
 
-                Debug.Log("Hit Normal: " + hit.normal);
-                Debug.Log("Unicycle Transform: " + transform.rotation);
+                //Debug.Log("Hit Normal: " + hit.normal);
+                //Debug.Log("Unicycle Transform: " + transform.rotation);
             }
         }
 
