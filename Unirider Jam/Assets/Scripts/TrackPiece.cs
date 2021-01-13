@@ -9,4 +9,6 @@ public class TrackPiece : MonoBehaviour
 
     [Range(0, 3)]
     public int trackWeight;
+
+    public bool generateBackwards;
 }
