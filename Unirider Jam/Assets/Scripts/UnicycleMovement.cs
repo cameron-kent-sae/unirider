@@ -21,12 +21,17 @@ public class UnicycleMovement : MonoBehaviour
 
     private Rigidbody rb;
 
+    private GameObject currentTrack;
+    private GameObject levelGenerationManager;
+
     void Start()
     {
         if (gameObject.GetComponent<Rigidbody>())
         {
             rb = gameObject.GetComponent<Rigidbody>();
         }
+
+        if (levelGenerationManager = GameObject.Find("LevelGenerationManager")) { }
     }
 
     void Update()
@@ -92,10 +97,10 @@ public class UnicycleMovement : MonoBehaviour
 
             if (rotateTowardsGround)
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, 0.01f);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, 0.01f + (rb.velocity.magnitude / 1000));
 
-                Debug.Log("Hit Normal: " + hit.normal);
-                Debug.Log("Unicycle Transform: " + transform.rotation);
+                //Debug.Log("Hit Normal: " + hit.normal);
+                //Debug.Log("Unicycle Transform: " + transform.rotation);
             }
         }
 
@@ -111,6 +116,19 @@ public class UnicycleMovement : MonoBehaviour
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation = new Quaternion(0, transform.rotation.y, 0, transform.rotation.w), 1 * Time.deltaTime);
             }
+        }
+        else
+        {
+            TrackGround(hit);
+        }
+    }
+
+    void TrackGround(RaycastHit hit)
+    {
+        if(hit.collider != null)
+        {
+            currentTrack = hit.collider.gameObject.transform.parent.gameObject;
+            levelGenerationManager.GetComponent<LevelGeneration>().ChangeTrack(hit.collider.gameObject.transform.parent.gameObject);
         }
     }
 }
