@@ -90525,6 +90525,7 @@ MonoBehaviour:
   trackPiece: {fileID: 5415592443714774198}
   endLocation: {fileID: 1714581561096691282}
   trackWeight: 2
+  generateBackwards: 0
 --- !u!1 &5415592443755039786
 GameObject:
   m_ObjectHideFlags: 0
