@@ -14,6 +14,7 @@ public class UnicycleMovement : MonoBehaviour
     public int currentNumberOfJumps;
 
     public bool rotateTowardsGround = false;
+    public bool autoCorrectRotation = true;
     private bool isGrounded;
 
     public Transform groundCheckPoint;
@@ -76,7 +77,26 @@ public class UnicycleMovement : MonoBehaviour
         {
             childCycle.transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
         }
-        
+
+        if (!isGrounded)
+        {
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                transform.Rotate(-childCycle.transform.right * rotationSpeed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                transform.Rotate(childCycle.transform.right * rotationSpeed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                transform.Rotate(-childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                transform.Rotate(childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+            }
+        }
     }
 
     void GroundRotate()
@@ -112,7 +132,7 @@ public class UnicycleMovement : MonoBehaviour
 
             Debug.DrawLine(groundCheckPoint.position, new Vector3(groundCheckPoint.position.x, groundCheckPoint.position.y - groundCheckDistance, groundCheckPoint.position.z), Color.green);
 
-            if(transform.rotation.x != 0 || transform.rotation.z != 0)
+            if(autoCorrectRotation && (transform.rotation.x != 0 || transform.rotation.z != 0))
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation = new Quaternion(0, transform.rotation.y, 0, transform.rotation.w), 1 * Time.deltaTime);
             }
