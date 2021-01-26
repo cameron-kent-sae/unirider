@@ -14,6 +14,8 @@ public class UnicycleMovement : MonoBehaviour
     public int currentNumberOfJumps;
 
     public bool rotateTowardsGround = false;
+    public bool autoCorrectRotation = true;
+    public bool clampRotation = true;
     private bool isGrounded;
 
     public Transform groundCheckPoint;
@@ -76,7 +78,26 @@ public class UnicycleMovement : MonoBehaviour
         {
             childCycle.transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
         }
-        
+
+        if (!isGrounded)
+        {
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                transform.Rotate(-childCycle.transform.right * rotationSpeed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                transform.Rotate(childCycle.transform.right * rotationSpeed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                transform.Rotate(-childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                transform.Rotate(childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+            }
+        }
     }
 
     void GroundRotate()
@@ -99,12 +120,33 @@ public class UnicycleMovement : MonoBehaviour
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, 0.01f + (rb.velocity.magnitude / 1000));
 
+                //childCycle.transform.rotation = Quaternion.Slerp(childCycle.transform.rotation, childCycle.transform.rotation = new Quaternion(transform.rotation.x, childCycle.transform.rotation.y, transform.rotation.z, transform.rotation.w), 1 * Time.deltaTime);
+
                 //Debug.Log("Hit Normal: " + hit.normal);
                 //Debug.Log("Unicycle Transform: " + transform.rotation);
+                 /*
+                if (clampRotation)
+                {
+                    if (transform.rotation.x > 0 && transform.rotation.x < 0.1f)
+                    {
+                        transform.SetPositionAndRotation(transform.position, new Quaternion(0, transform.rotation.y, transform.rotation.z, transform.rotation.w));
+                    }
+                    if (transform.rotation.y > 0 && transform.rotation.y < 0.1f)
+                    {
+                        //transform.Rotate(new Vector3(0, transform.rotation.y, transform.rotation.z));
+                    }
+                    if (transform.rotation.z > 0 && transform.rotation.z < 0.1f)
+                    {
+                        transform.SetPositionAndRotation(transform.position, new Quaternion(transform.rotation.x, transform.rotation.y, 0, transform.rotation.w));
+                    }
+                }
+                 */
             }
+
+            
         }
 
-        if(hit.collider == null)
+        if (hit.collider == null)
         {
             isGrounded = false;
 
@@ -112,10 +154,12 @@ public class UnicycleMovement : MonoBehaviour
 
             Debug.DrawLine(groundCheckPoint.position, new Vector3(groundCheckPoint.position.x, groundCheckPoint.position.y - groundCheckDistance, groundCheckPoint.position.z), Color.green);
 
-            if(transform.rotation.x != 0 || transform.rotation.z != 0)
+            if(autoCorrectRotation && (transform.rotation.x != 0 || transform.rotation.z != 0))
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation = new Quaternion(0, transform.rotation.y, 0, transform.rotation.w), 1 * Time.deltaTime);
             }
+
+            
         }
         else
         {
