@@ -9,6 +9,7 @@ public class UnicycleMovement : MonoBehaviour
     public float jumpForce = 10;
     public float gravity = -9.8f;
     private float groundCheckDistance = 0.5f;
+    private float groundRotateMultiplier = 0.1f;
 
     public int numberOfJumps = 2;
     public int currentNumberOfJumps;
@@ -17,6 +18,7 @@ public class UnicycleMovement : MonoBehaviour
     public bool autoCorrectRotation = true;
     public bool clampRotation = true;
     private bool isGrounded;
+    private bool isStickey;
 
     public Transform groundCheckPoint;
     public Transform childCycle;
@@ -69,7 +71,6 @@ public class UnicycleMovement : MonoBehaviour
             }
         }
 
-        
         if (Input.GetKey(KeyCode.A))
         {
             childCycle.transform.Rotate(-Vector3.up * rotationSpeed * Time.deltaTime);
@@ -118,12 +119,13 @@ public class UnicycleMovement : MonoBehaviour
 
             if (rotateTowardsGround)
             {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, 0.01f + (rb.velocity.magnitude / 1000));
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, groundRotateMultiplier + (rb.velocity.magnitude / 1000));
 
                 //childCycle.transform.rotation = Quaternion.Slerp(childCycle.transform.rotation, childCycle.transform.rotation = new Quaternion(transform.rotation.x, childCycle.transform.rotation.y, transform.rotation.z, transform.rotation.w), 1 * Time.deltaTime);
 
                 //Debug.Log("Hit Normal: " + hit.normal);
                 //Debug.Log("Unicycle Transform: " + transform.rotation);
+
                  /*
                 if (clampRotation)
                 {
@@ -143,14 +145,43 @@ public class UnicycleMovement : MonoBehaviour
                  */
             }
 
-            
+            if (currentTrack && currentTrack.gameObject.GetComponent<TrackPiece>())
+            {
+                if (currentTrack.gameObject.GetComponent<TrackPiece>().isStickey && isStickey == false)
+                {
+                    isStickey = true;
+
+                    rb.useGravity = false;
+
+                    groundRotateMultiplier = 0.2f;
+                }
+            }
+
+            if (isStickey)
+            {
+                rb.AddForce(hit.normal * ((gravity / 2)) * (rb.velocity.magnitude / 4));
+            }
+        }
+        else
+        {
+            if (isStickey)
+            {
+                isStickey = false;
+
+                rb.useGravity = true;
+
+                groundRotateMultiplier = 0.1f;
+            }
         }
 
         if (hit.collider == null)
         {
             isGrounded = false;
 
-            rb.AddForce(Vector3.up * gravity);
+            if (!isStickey)
+            {
+                rb.AddForce(Vector3.up * gravity);
+            }
 
             Debug.DrawLine(groundCheckPoint.position, new Vector3(groundCheckPoint.position.x, groundCheckPoint.position.y - groundCheckDistance, groundCheckPoint.position.z), Color.green);
 

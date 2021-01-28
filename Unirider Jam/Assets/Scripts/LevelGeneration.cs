@@ -5,11 +5,13 @@ using UnityEngine;
 public class LevelGeneration : MonoBehaviour
 {
     public GameObject startingPiece;
+    private GameObject currentTrack;
 
     public Transform startLocation;
 
     public int numberOfTracks = 5;
     private int currentNumberOfTracks;
+    private int currentNumberOfBackTracks;
     private int currentWeight;
 
     public TrackPiece[] trackPieces;
@@ -25,7 +27,10 @@ public class LevelGeneration : MonoBehaviour
 
     void Update()
     {
-        
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            GenerateRandomTrack();
+        }
     }
 
     public void StartGeneration()
@@ -47,49 +52,54 @@ public class LevelGeneration : MonoBehaviour
 
     private void GenerateRandomTrack()
     {
-        if(currentNumberOfTracks < numberOfTracks)
+        List<GameObject> possibleTracks = new List<GameObject>();
+
+        if (currentWeight <= 1)
         {
-            List<GameObject> possibleTracks = new List<GameObject>();
-
-            if(currentWeight <= 1)
+            foreach (TrackPiece piece in trackPieces)
             {
-                foreach(TrackPiece piece in trackPieces)
+                if (piece.trackWeight > 0 && piece.trackWeight <= 3)
                 {
-                    if(piece.trackWeight > 0 && piece.trackWeight <= 3)
-                    {
-                        possibleTracks.Add(piece.trackPiece);
-                    }
+                    possibleTracks.Add(piece.trackPiece);
                 }
             }
-            else if(currentWeight == 2)
+        }
+        else if (currentWeight == 2)
+        {
+            foreach (TrackPiece piece in trackPieces)
             {
-                foreach (TrackPiece piece in trackPieces)
+                if (piece.trackWeight >= 0 && piece.trackWeight < 2)
                 {
-                    if (piece.trackWeight >= 0 && piece.trackWeight < 2)
-                    {
-                        possibleTracks.Add(piece.trackPiece);
-                    }
+                    possibleTracks.Add(piece.trackPiece);
                 }
             }
-            else if(currentWeight > 2)
+        }
+        else if (currentWeight > 2)
+        {
+            foreach (TrackPiece piece in trackPieces)
             {
-                foreach (TrackPiece piece in trackPieces)
+                if (piece.trackWeight <= 1)
                 {
-                    if (piece.trackWeight <= 1)
-                    {
-                        possibleTracks.Add(piece.trackPiece);
-                    }
+                    possibleTracks.Add(piece.trackPiece);
                 }
             }
+        }
 
-            int randomTrackIndex = Random.Range(0, possibleTracks.Count);
-            Transform spawnPoint = spawnedTracks[spawnedTracks.Count - 1].GetComponent<TrackPiece>().endLocation;
+        int randomTrackIndex = Random.Range(0, possibleTracks.Count);
+        Transform spawnPoint = spawnedTracks[spawnedTracks.Count - 1].GetComponent<TrackPiece>().endLocation;
 
-            GameObject spawnTrack = Instantiate(possibleTracks[randomTrackIndex], spawnPoint.position, spawnPoint.rotation);
+        GameObject spawnTrack = Instantiate(possibleTracks[randomTrackIndex], spawnPoint.position, spawnPoint.rotation);
 
-            AddTrack(spawnTrack);
+        AddTrack(spawnTrack);
 
-            if(spawnTrack && spawnTrack.GetComponent<TrackPiece>() && !spawnTrack.GetComponent<TrackPiece>().generateBackwards)
+        if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && spawnTrack.GetComponent<TrackPiece>().generateBackwards)
+        {
+            generateBackwards = true;
+        }
+
+        if (spawnedTracks.Count < numberOfTracks)
+        {
+            if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && !spawnTrack.GetComponent<TrackPiece>().generateBackwards)
             {
                 Invoke("GenerateRandomTrack", 0.1f);
             }
@@ -98,7 +108,11 @@ public class LevelGeneration : MonoBehaviour
 
     private void AddTrack(GameObject track)
     {
-        //spawnedTracks.RemoveAt(0);
+        if(spawnedTracks.Count >= numberOfTracks)
+        {
+            Destroy(spawnedTracks[0], 1);
+            spawnedTracks.RemoveAt(0);
+        }
 
         spawnedTracks.Add(track);
 
@@ -123,31 +137,49 @@ public class LevelGeneration : MonoBehaviour
 
     public void ChangeTrack(GameObject track)
     {
-        if(track.GetComponent<TrackPiece>() && track.GetComponent<TrackPiece>().generateBackwards)
+        if (track.GetComponent<TrackPiece>())
         {
-            generateBackwards = true;
-
-            List<GameObject> otherTracks = new List<GameObject>();
-            otherTracks = spawnedTracks;
-
-            foreach (GameObject otherTrack in otherTracks)
+            if (currentTrack)
             {
-                if (!otherTrack.GetComponent<TrackPiece>().generateBackwards)
+                if(track != currentTrack)
                 {
-                    Destroy(otherTrack);
+                    if(!generateBackwards)
+                    GenerateRandomTrack();
 
-                    //RemoveTrack(otherTrack);
+                    currentTrack = track;
                 }
             }
+            else
+            {
+                currentTrack = track;
+            }
 
-            spawnedTracks.Clear();
+            if (track.GetComponent<TrackPiece>().generateBackwards)
+            {
+                generateBackwards = false;
 
-            spawnedTracks.Add(track);
-            currentNumberOfTracks = 1;
+                List<GameObject> otherTracks = new List<GameObject>();
+                otherTracks = spawnedTracks;
 
-            track.GetComponent<TrackPiece>().generateBackwards = false;
+                foreach (GameObject otherTrack in otherTracks)
+                {
+                    if (!otherTrack.GetComponent<TrackPiece>().generateBackwards)
+                    {
+                        Destroy(otherTrack);
 
-            Invoke("GenerateRandomTrack", 0.1f);
+                        //RemoveTrack(otherTrack);
+                    }
+                }
+
+                spawnedTracks.Clear();
+
+                spawnedTracks.Add(track);
+                currentNumberOfTracks = 1;
+
+                track.GetComponent<TrackPiece>().generateBackwards = false;
+
+                Invoke("GenerateRandomTrack", 0.1f);
+            }
         }
     }
 }

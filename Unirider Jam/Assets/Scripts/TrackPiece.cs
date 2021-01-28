@@ -11,4 +11,5 @@ public class TrackPiece : MonoBehaviour
     public int trackWeight;
 
     public bool generateBackwards;
+    public bool isStickey;
 }
