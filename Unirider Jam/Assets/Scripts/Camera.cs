@@ -18,8 +18,10 @@ public class Camera : MonoBehaviour
     {
         //transform.rotation = Quaternion.RotateTowards(transform.rotation, player.rotation, speed * Time.deltaTime);
 
+        if(player)
         transform.LookAt(player);
 
+        if(camLocation)
         transform.position = Vector3.Slerp(transform.position, camLocation.position, (speed * (Vector3.Distance(transform.position, camLocation.position) / 4)) * Time.deltaTime);
     }
 }

@@ -5,6 +5,7 @@ using UnityEngine;
 public class UnicycleMovement : MonoBehaviour
 {
     public float movementSpeed = 10;
+    private float currentMovementSpeed;
     public float rotationSpeed = 10;
     public float jumpForce = 10;
     public float gravity = -9.8f;
@@ -34,6 +35,8 @@ public class UnicycleMovement : MonoBehaviour
         {
             rb = gameObject.GetComponent<Rigidbody>();
         }
+
+        currentMovementSpeed = movementSpeed;
 
         if (levelGenerationManager = GameObject.Find("LevelGenerationManager")) { }
     }
@@ -67,7 +70,7 @@ public class UnicycleMovement : MonoBehaviour
             if (rb)
             {
                 //rb.velocity.Set(rb.velocity.x, 0, rb.velocity.z);
-                rb.AddForce(childCycle.forward * movementSpeed);
+                rb.AddForce(childCycle.forward * currentMovementSpeed);
             }
         }
 
@@ -147,19 +150,44 @@ public class UnicycleMovement : MonoBehaviour
 
             if (currentTrack && currentTrack.gameObject.GetComponent<TrackPiece>())
             {
-                if (currentTrack.gameObject.GetComponent<TrackPiece>().isStickey && isStickey == false)
+                if (currentTrack.gameObject.GetComponent<TrackPiece>().isStickey && isStickey == false && rb.velocity.magnitude > 5)
                 {
                     isStickey = true;
 
                     rb.useGravity = false;
 
-                    groundRotateMultiplier = 0.2f;
+                    //groundRotateMultiplier = 0.05f;
+
+                    //currentMovementSpeed = movementSpeed * 3;
+                }
+                else
+                {
+                    if (isStickey)
+                    {
+                        isStickey = false;
+
+                        rb.useGravity = true;
+
+                        groundRotateMultiplier = 0.1f;
+
+                        currentMovementSpeed = movementSpeed;
+                    }
                 }
             }
 
             if (isStickey)
             {
-                rb.AddForce(hit.normal * ((gravity / 2)) * (rb.velocity.magnitude / 4));
+                //rb.AddForce(hit.normal * ((gravity / 2)) * (rb.velocity.magnitude / 4));
+                transform.position = Vector3.Lerp(transform.position, hit.point, rotationSpeed);
+
+                Debug.Log("rb.velocity.magnitude = " + rb.velocity.magnitude);
+
+                if (rb.velocity.magnitude < 5)
+                {
+                    isStickey = false;
+
+                    Debug.Log("set sticky to false");
+                }
             }
         }
         else
@@ -171,6 +199,8 @@ public class UnicycleMovement : MonoBehaviour
                 rb.useGravity = true;
 
                 groundRotateMultiplier = 0.1f;
+
+                currentMovementSpeed = movementSpeed;
             }
         }
 
