@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TrackPiece : MonoBehaviour
 {
@@ -9,6 +7,8 @@ public class TrackPiece : MonoBehaviour
 
     [Range(0, 3)]
     public int trackWeight;
+    public int trackScore = 1;
 
     public bool generateBackwards;
+    public bool isStickey;
 }

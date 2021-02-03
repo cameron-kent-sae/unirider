@@ -92,6 +92,7 @@ MonoBehaviour:
   endLocation: {fileID: 623882285999658202}
   trackWeight: 3
   generateBackwards: 0
+  isStickey: 1
 --- !u!1001 &3357890219217560413
 PrefabInstance:
   m_ObjectHideFlags: 0
