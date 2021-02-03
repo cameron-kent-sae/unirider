@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Camera : MonoBehaviour
 {
@@ -16,11 +14,11 @@ public class Camera : MonoBehaviour
 
     void FixedUpdate()
     {
-        //transform.rotation = Quaternion.RotateTowards(transform.rotation, player.rotation, speed * Time.deltaTime);
+        // Look at player
+        if (player)
+            transform.LookAt(player);
 
-        if(player)
-        transform.LookAt(player);
-
+        // Follow Player
         if(camLocation)
         transform.position = Vector3.Slerp(transform.position, camLocation.position, (speed * (Vector3.Distance(transform.position, camLocation.position) / 4)) * Time.deltaTime);
     }

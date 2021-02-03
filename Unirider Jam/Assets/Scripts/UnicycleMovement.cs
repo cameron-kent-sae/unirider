@@ -20,6 +20,8 @@ public class UnicycleMovement : MonoBehaviour
     public bool clampRotation = true;
     private bool isGrounded;
     private bool isStickey;
+    private bool isMoving;
+    private bool canStickey = true;
 
     public Transform groundCheckPoint;
     public Transform childCycle;
@@ -28,6 +30,8 @@ public class UnicycleMovement : MonoBehaviour
 
     private GameObject currentTrack;
     private GameObject levelGenerationManager;
+
+    private Animator animator;
 
     void Start()
     {
@@ -39,13 +43,18 @@ public class UnicycleMovement : MonoBehaviour
         currentMovementSpeed = movementSpeed;
 
         if (levelGenerationManager = GameObject.Find("LevelGenerationManager")) { }
+        if (animator = gameObject.GetComponent<Animator>()) { }
     }
 
     void Update()
     {
-        GroundRotate();
         Movement();
         Jumping();
+    }
+
+    private void FixedUpdate()
+    {
+        GroundRotate();
     }
 
     void Jumping()
@@ -54,6 +63,8 @@ public class UnicycleMovement : MonoBehaviour
         {
             if (Input.GetButtonDown("Jump") && rb)
             {
+                Unstick();
+
                 rb.AddForce(transform.up * jumpForce);
 
                 currentNumberOfJumps--;
@@ -72,6 +83,26 @@ public class UnicycleMovement : MonoBehaviour
                 //rb.velocity.Set(rb.velocity.x, 0, rb.velocity.z);
                 rb.AddForce(childCycle.forward * currentMovementSpeed);
             }
+
+            // Check if the player is moving and apply tilting animations
+            if (isMoving == false)
+            {
+                isMoving = true;
+
+                if (animator)
+                {
+                    animator.SetBool("isMoving", true);
+                }
+            }
+        }
+        else if (isMoving == true)
+        {
+            isMoving = false;
+
+            if (animator)
+            {
+                animator.SetBool("isMoving", false);
+            }
         }
 
         if (Input.GetKey(KeyCode.A))
@@ -87,20 +118,34 @@ public class UnicycleMovement : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.UpArrow))
             {
-                transform.Rotate(-childCycle.transform.right * rotationSpeed * Time.deltaTime);
+                transform.Rotate(-Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime));
+                //transform.RotateAroundLocal(-Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime));
+                //transform.Rotate(-childCycle.transform.right * rotationSpeed * Time.deltaTime);
+                //Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed);
             }
             if (Input.GetKey(KeyCode.DownArrow))
             {
-                transform.Rotate(childCycle.transform.right * rotationSpeed * Time.deltaTime);
+                transform.Rotate(Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime).normalized);
+                //transform.Rotate(childCycle.transform.right * rotationSpeed * Time.deltaTime);
             }
             if (Input.GetKey(KeyCode.LeftArrow))
             {
-                transform.Rotate(-childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+                transform.Rotate(-Vector3.LerpUnclamped(childCycle.transform.forward, -childCycle.transform.forward, rotationSpeed * Time.deltaTime).normalized * 2);
+                //transform.Rotate(-childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
             }
             if (Input.GetKey(KeyCode.RightArrow))
             {
-                transform.Rotate(childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+                transform.Rotate(Vector3.LerpUnclamped(childCycle.transform.forward, -childCycle.transform.forward, rotationSpeed * Time.deltaTime).normalized * 2);
+                //transform.Rotate(childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Quaternion mainOrientation = transform.rotation;
+            Quaternion childOrientation = childCycle.transform.rotation;
+
+            //childCycle.transform.
         }
     }
 
@@ -123,58 +168,21 @@ public class UnicycleMovement : MonoBehaviour
             if (rotateTowardsGround)
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation, groundRotateMultiplier + (rb.velocity.magnitude / 1000));
-
-                //childCycle.transform.rotation = Quaternion.Slerp(childCycle.transform.rotation, childCycle.transform.rotation = new Quaternion(transform.rotation.x, childCycle.transform.rotation.y, transform.rotation.z, transform.rotation.w), 1 * Time.deltaTime);
-
-                //Debug.Log("Hit Normal: " + hit.normal);
-                //Debug.Log("Unicycle Transform: " + transform.rotation);
-
-                 /*
-                if (clampRotation)
-                {
-                    if (transform.rotation.x > 0 && transform.rotation.x < 0.1f)
-                    {
-                        transform.SetPositionAndRotation(transform.position, new Quaternion(0, transform.rotation.y, transform.rotation.z, transform.rotation.w));
-                    }
-                    if (transform.rotation.y > 0 && transform.rotation.y < 0.1f)
-                    {
-                        //transform.Rotate(new Vector3(0, transform.rotation.y, transform.rotation.z));
-                    }
-                    if (transform.rotation.z > 0 && transform.rotation.z < 0.1f)
-                    {
-                        transform.SetPositionAndRotation(transform.position, new Quaternion(transform.rotation.x, transform.rotation.y, 0, transform.rotation.w));
-                    }
-                }
-                 */
             }
 
             if (currentTrack && currentTrack.gameObject.GetComponent<TrackPiece>())
             {
-                if (currentTrack.gameObject.GetComponent<TrackPiece>().isStickey && isStickey == false && rb.velocity.magnitude > 5)
+                if (currentTrack.gameObject.GetComponent<TrackPiece>().isStickey && isStickey == false && rb.velocity.magnitude > 5 && canStickey)
                 {
-                    isStickey = true;
-
-                    rb.useGravity = false;
-
-                    //groundRotateMultiplier = 0.05f;
-
-                    //currentMovementSpeed = movementSpeed * 3;
+                    Stick();
                 }
-                else
+                else if(!currentTrack.gameObject.GetComponent<TrackPiece>().isStickey)
                 {
-                    if (isStickey)
-                    {
-                        isStickey = false;
-
-                        rb.useGravity = true;
-
-                        groundRotateMultiplier = 0.1f;
-
-                        currentMovementSpeed = movementSpeed;
-                    }
+                    Unstick();
                 }
             }
 
+            
             if (isStickey)
             {
                 //rb.AddForce(hit.normal * ((gravity / 2)) * (rb.velocity.magnitude / 4));
@@ -184,24 +192,14 @@ public class UnicycleMovement : MonoBehaviour
 
                 if (rb.velocity.magnitude < 5)
                 {
-                    isStickey = false;
-
-                    Debug.Log("set sticky to false");
+                    Unstick();
                 }
             }
+            
         }
         else
         {
-            if (isStickey)
-            {
-                isStickey = false;
-
-                rb.useGravity = true;
-
-                groundRotateMultiplier = 0.1f;
-
-                currentMovementSpeed = movementSpeed;
-            }
+            Unstick();
         }
 
         if (hit.collider == null)
@@ -210,7 +208,7 @@ public class UnicycleMovement : MonoBehaviour
 
             if (!isStickey)
             {
-                rb.AddForce(Vector3.up * gravity);
+                rb.AddForce(Vector3.up * gravity * 6);
             }
 
             Debug.DrawLine(groundCheckPoint.position, new Vector3(groundCheckPoint.position.x, groundCheckPoint.position.y - groundCheckDistance, groundCheckPoint.position.z), Color.green);
@@ -226,6 +224,35 @@ public class UnicycleMovement : MonoBehaviour
         {
             TrackGround(hit);
         }
+    }
+
+    void Stick()
+    {
+        isStickey = true;
+
+        rb.useGravity = false;
+    }
+
+    void Unstick()
+    {
+        if (isStickey)
+        {
+            isStickey = false;
+
+            rb.useGravity = true;
+
+            groundRotateMultiplier = 0.1f;
+
+            currentMovementSpeed = movementSpeed;
+
+            canStickey = false;
+            Invoke("CanStick", 0.5f);
+        }
+    }
+
+    void CanStick()
+    {
+        canStickey = true;
     }
 
     void TrackGround(RaycastHit hit)

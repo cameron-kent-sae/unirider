@@ -50,6 +50,7 @@ MonoBehaviour:
   trackPiece: {fileID: 1950022039277260444}
   endLocation: {fileID: 1950022040059360799}
   trackWeight: 3
+  trackScore: 3
   generateBackwards: 0
   isStickey: 1
 --- !u!1 &1950022040059360798
