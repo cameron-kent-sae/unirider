@@ -237,7 +237,7 @@ public class LevelGeneration : MonoBehaviour
     }
 
     // Restart Game
-    void RestartGame()
+    public void RestartGame()
     {
         List<GameObject> otherTracks = new List<GameObject>();
         otherTracks = spawnedTracks;
