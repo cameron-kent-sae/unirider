@@ -22,6 +22,7 @@ public class LevelGeneration : MonoBehaviour
 
     private List<GameObject> spawnedTracks = new List<GameObject>();
 
+    public bool escEndGame;
     private bool generateBackwards;
 
     public Text scoreText;
@@ -44,6 +45,11 @@ public class LevelGeneration : MonoBehaviour
         {
             RestartGame();
         }
+
+        if(escEndGame && Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 
     public void StartGeneration()
@@ -59,6 +65,8 @@ public class LevelGeneration : MonoBehaviour
                 if(player.GetComponent<UnicycleMovement>() && player.GetComponent<UnicycleMovement>().childCycle)
                 {
                     player.GetComponent<UnicycleMovement>().childCycle.transform.rotation = playerStartLocation.rotation;
+
+                    player.GetComponent<UnicycleMovement>().startingLocation = playerStartLocation;
                 }
 
                 if (player.GetComponent<Rigidbody>())

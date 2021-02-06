@@ -788,6 +788,7 @@ MonoBehaviour:
   - {fileID: 6194325387558106010, guid: ada4eeadc96cab941ad2f2671b2cb796, type: 3}
   - {fileID: 1950022039277260445, guid: e8370d6352b348d46ba205a311325fc9, type: 3}
   - {fileID: 2822091570291209903, guid: f0942c3831907054a97a1a243bc9b7b1, type: 3}
+  escEndGame: 1
   scoreText: {fileID: 1309119810}
 --- !u!4 &1839984302
 Transform:
@@ -1287,7 +1288,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cac9bf6423cc1f48935f46f79ae1325, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementSpeed: 2.5
+  movementSpeed: 750
   rotationSpeed: 100
   jumpForce: 250
   gravity: -2.45
@@ -1458,7 +1459,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 0.014999998, y: 0.01, z: 0.028750002}
-  m_Center: {x: -4.656613e-10, y: 0.017500006, z: 0.0018749987}
+  m_Center: {x: -4.656613e-10, y: 0.01750001, z: 0.006}
 --- !u!33 &7091011068370349792
 MeshFilter:
   m_ObjectHideFlags: 0

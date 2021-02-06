@@ -24,9 +24,12 @@ public class UnicycleMovement : MonoBehaviour
     private bool isMoving;
     private bool canStickey = true;
     private bool canUpdateHeightTracker;
+    private bool flip;
+    private bool hasCollided;
 
     public Transform groundCheckPoint;
     public Transform childCycle;
+    public Transform startingLocation;
 
     private Rigidbody rb;
 
@@ -58,9 +61,18 @@ public class UnicycleMovement : MonoBehaviour
     private void FixedUpdate()
     {
         CalculateHeight();
-        IncorrectLanding();
 
         GroundRotate();
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        hasCollided = true;
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        hasCollided = false;
     }
 
     void Jumping()
@@ -226,6 +238,16 @@ public class UnicycleMovement : MonoBehaviour
         {
             TrackGround(hit);
         }
+
+        if (hasCollided && hit.collider == null)
+        {
+            if (transform.rotation.x > 0.65f || transform.rotation.x < -0.65f || transform.rotation.z > 0.65f || transform.rotation.z < -0.65f)
+            {
+                IncorrectLanding();
+
+                //levelGenerationManager.GetComponent<LevelGeneration>().RestartGame();
+            }
+        }
     }
 
     // Set the height tracker's location
@@ -290,11 +312,14 @@ public class UnicycleMovement : MonoBehaviour
 
     void IncorrectLanding()
     {
-        if (transform.rotation.x > 65)
+        if (rb)
         {
-            Debug.Log("Reset game");
+            rb.velocity = new Vector3(0, 0, 0);
+        }
 
-            //levelGenerationManager.GetComponent<LevelGeneration>().RestartGame();
+        if (startingLocation)
+        {
+            transform.rotation = startingLocation.rotation;
         }
     }
 
