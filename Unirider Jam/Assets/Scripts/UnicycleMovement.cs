@@ -9,6 +9,7 @@ public class UnicycleMovement : MonoBehaviour
     public float rotationSpeed = 10;
     public float jumpForce = 10;
     public float gravity = -9.8f;
+    public float fallResetDistance = -50;
     private float groundCheckDistance = 0.5f;
     private float groundRotateMultiplier = 0.1f;
 
@@ -22,14 +23,19 @@ public class UnicycleMovement : MonoBehaviour
     private bool isStickey;
     private bool isMoving;
     private bool canStickey = true;
+    private bool canUpdateHeightTracker;
+    private bool flip;
+    private bool hasCollided;
 
     public Transform groundCheckPoint;
     public Transform childCycle;
+    public Transform startingLocation;
 
     private Rigidbody rb;
 
     private GameObject currentTrack;
     private GameObject levelGenerationManager;
+    private GameObject heightTracker;
 
     private Animator animator;
 
@@ -54,7 +60,19 @@ public class UnicycleMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        CalculateHeight();
+
         GroundRotate();
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        hasCollided = true;
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        hasCollided = false;
     }
 
     void Jumping()
@@ -81,7 +99,7 @@ public class UnicycleMovement : MonoBehaviour
             if (rb)
             {
                 //rb.velocity.Set(rb.velocity.x, 0, rb.velocity.z);
-                rb.AddForce(childCycle.forward * currentMovementSpeed);
+                rb.AddForce(childCycle.forward * currentMovementSpeed * Time.deltaTime);
             }
 
             // Check if the player is moving and apply tilting animations
@@ -118,34 +136,26 @@ public class UnicycleMovement : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.UpArrow))
             {
-                transform.Rotate(-Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime));
+                //transform.Rotate(-Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime));
                 //transform.RotateAroundLocal(-Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime));
-                //transform.Rotate(-childCycle.transform.right * rotationSpeed * Time.deltaTime);
+                transform.Rotate(-childCycle.transform.right * rotationSpeed * Time.deltaTime);
                 //Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed);
             }
             if (Input.GetKey(KeyCode.DownArrow))
             {
-                transform.Rotate(Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime).normalized);
-                //transform.Rotate(childCycle.transform.right * rotationSpeed * Time.deltaTime);
+                //transform.Rotate(Vector3.LerpUnclamped(childCycle.transform.right, -childCycle.transform.right, rotationSpeed * Time.deltaTime).normalized);
+                transform.Rotate(childCycle.transform.right * rotationSpeed * Time.deltaTime);
             }
             if (Input.GetKey(KeyCode.LeftArrow))
             {
-                transform.Rotate(-Vector3.LerpUnclamped(childCycle.transform.forward, -childCycle.transform.forward, rotationSpeed * Time.deltaTime).normalized * 2);
-                //transform.Rotate(-childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+                //transform.Rotate(-Vector3.LerpUnclamped(childCycle.transform.forward, -childCycle.transform.forward, rotationSpeed * Time.deltaTime).normalized * 2);
+                transform.Rotate(-childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
             }
             if (Input.GetKey(KeyCode.RightArrow))
             {
-                transform.Rotate(Vector3.LerpUnclamped(childCycle.transform.forward, -childCycle.transform.forward, rotationSpeed * Time.deltaTime).normalized * 2);
-                //transform.Rotate(childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
+                //transform.Rotate(Vector3.LerpUnclamped(childCycle.transform.forward, -childCycle.transform.forward, rotationSpeed * Time.deltaTime).normalized * 2);
+                transform.Rotate(childCycle.transform.forward * 2 * rotationSpeed * Time.deltaTime);
             }
-        }
-
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            Quaternion mainOrientation = transform.rotation;
-            Quaternion childOrientation = childCycle.transform.rotation;
-
-            //childCycle.transform.
         }
     }
 
@@ -181,7 +191,6 @@ public class UnicycleMovement : MonoBehaviour
                     Unstick();
                 }
             }
-
             
             if (isStickey)
             {
@@ -195,7 +204,12 @@ public class UnicycleMovement : MonoBehaviour
                     Unstick();
                 }
             }
-            
+
+            // Reset height tracker when on a surface
+            if (!canUpdateHeightTracker)
+            {
+                canUpdateHeightTracker = true;
+            }
         }
         else
         {
@@ -218,11 +232,57 @@ public class UnicycleMovement : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation = new Quaternion(0, transform.rotation.y, 0, transform.rotation.w), 1 * Time.deltaTime);
             }
 
-            
+            SetHeightTracker();
         }
         else
         {
             TrackGround(hit);
+        }
+
+        if (hasCollided && hit.collider == null)
+        {
+            if (transform.rotation.x > 0.65f || transform.rotation.x < -0.65f || transform.rotation.z > 0.65f || transform.rotation.z < -0.65f)
+            {
+                IncorrectLanding();
+
+                //levelGenerationManager.GetComponent<LevelGeneration>().RestartGame();
+            }
+        }
+    }
+
+    // Set the height tracker's location
+    void SetHeightTracker()
+    {
+        if (canUpdateHeightTracker)
+        {
+            // If there isn't already a height tracker, create one
+            if (heightTracker == null)
+            {
+                heightTracker = new GameObject();
+            }
+
+            // Set the position to the player's position
+            heightTracker.transform.position = gameObject.transform.position;
+
+            canUpdateHeightTracker = false;
+        }
+    }
+
+    void CalculateHeight()
+    {
+        if (heightTracker)
+        {
+            if (!canUpdateHeightTracker)
+            {
+                // Calculate the y component distance from the player and the height tracker 
+                float distance = transform.position.y - heightTracker.transform.position.y;
+
+                // If the distance is less than the fallResetDistance, then reset the game
+                if (distance < fallResetDistance)
+                {
+                    levelGenerationManager.GetComponent<LevelGeneration>().RestartGame();
+                }
+        }
         }
     }
 
@@ -250,11 +310,25 @@ public class UnicycleMovement : MonoBehaviour
         }
     }
 
+    void IncorrectLanding()
+    {
+        if (rb)
+        {
+            rb.velocity = new Vector3(0, 0, 0);
+        }
+
+        if (startingLocation)
+        {
+            transform.rotation = startingLocation.rotation;
+        }
+    }
+
     void CanStick()
     {
         canStickey = true;
     }
 
+    // Tell the level generater the current track piece the player is on
     void TrackGround(RaycastHit hit)
     {
         if(hit.collider != null)

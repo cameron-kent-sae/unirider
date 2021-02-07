@@ -788,6 +788,7 @@ MonoBehaviour:
   - {fileID: 6194325387558106010, guid: ada4eeadc96cab941ad2f2671b2cb796, type: 3}
   - {fileID: 1950022039277260445, guid: e8370d6352b348d46ba205a311325fc9, type: 3}
   - {fileID: 2822091570291209903, guid: f0942c3831907054a97a1a243bc9b7b1, type: 3}
+  escEndGame: 1
   scoreText: {fileID: 1309119810}
 --- !u!4 &1839984302
 Transform:
@@ -1269,7 +1270,7 @@ Rigidbody:
   serializedVersion: 2
   m_Mass: 0.5
   m_Drag: 0.5
-  m_AngularDrag: 0
+  m_AngularDrag: 0.1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
@@ -1287,10 +1288,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cac9bf6423cc1f48935f46f79ae1325, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementSpeed: 2.5
+  movementSpeed: 750
   rotationSpeed: 100
   jumpForce: 250
   gravity: -2.45
+  fallResetDistance: -30
   numberOfJumps: 2
   currentNumberOfJumps: 0
   rotateTowardsGround: 1
@@ -1418,6 +1420,7 @@ GameObject:
   - component: {fileID: 5930455758162448457}
   - component: {fileID: 5930455758162448563}
   - component: {fileID: 6812925644208126976}
+  - component: {fileID: 6812925644208126977}
   m_Layer: 0
   m_Name: Unicycle
   m_TagString: Untagged
@@ -1444,6 +1447,19 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!65 &6812925644208126977
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6812925644208126975}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.014999998, y: 0.01, z: 0.028750002}
+  m_Center: {x: -4.656613e-10, y: 0.01750001, z: 0.006}
 --- !u!33 &7091011068370349792
 MeshFilter:
   m_ObjectHideFlags: 0
