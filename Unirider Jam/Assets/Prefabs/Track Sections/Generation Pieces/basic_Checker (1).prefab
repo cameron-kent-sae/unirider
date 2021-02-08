@@ -6521,8 +6521,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trackPiece: {fileID: 6224239498855784292}
-  endLocation: {fileID: 4985417003206810555}
+  splitTrackEndPiece: {fileID: 0}
+  endLocation:
+  - {fileID: 4985417003206810555}
   trackWeight: 3
   trackScore: 0
   generateBackwards: 0
+  splitTrack: 0
   isStickey: 0
+  isStright: 0

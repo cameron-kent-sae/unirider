@@ -46,11 +46,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trackPiece: {fileID: 2641365734647864562}
-  endLocation: {fileID: 5020213582500287989}
+  splitTrackEndPiece: {fileID: 0}
+  endLocation:
+  - {fileID: 5020213582500287989}
   trackWeight: 3
   trackScore: 2
   generateBackwards: 1
+  splitTrack: 0
   isStickey: 0
+  isStright: 0
 --- !u!1 &2641365736241844307
 GameObject:
   m_ObjectHideFlags: 0

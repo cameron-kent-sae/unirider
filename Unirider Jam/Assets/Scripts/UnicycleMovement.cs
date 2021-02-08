@@ -197,8 +197,6 @@ public class UnicycleMovement : MonoBehaviour
                 //rb.AddForce(hit.normal * ((gravity / 2)) * (rb.velocity.magnitude / 4));
                 transform.position = Vector3.Lerp(transform.position, hit.point, rotationSpeed);
 
-                Debug.Log("rb.velocity.magnitude = " + rb.velocity.magnitude);
-
                 if (rb.velocity.magnitude < 5)
                 {
                     Unstick();
