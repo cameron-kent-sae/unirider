@@ -6,13 +6,16 @@ using UnityEngine.UI;
 public class LevelGeneration : MonoBehaviour
 {
     public GameObject startingPiece;
-    private GameObject currentTrack;
     public GameObject player;
+    private GameObject currentTrack;
+    private GameObject splitReturnTrack;
 
     public Transform trackStartLocation;
     public Transform playerStartLocation;
+    private Transform localEndLocation;
 
     public int numberOfTracks = 5;
+    public int numberOfTracksPerSplit = 3;
     private int currentNumberOfTracks;
     private int currentNumberOfBackTracks;
     private int currentWeight;
@@ -21,9 +24,11 @@ public class LevelGeneration : MonoBehaviour
     public TrackPiece[] trackPieces;
 
     private List<GameObject> spawnedTracks = new List<GameObject>();
+    private List<GameObject> spawnedSplitTracks = new List<GameObject>();
 
     public bool escEndGame;
     private bool generateBackwards;
+    private bool splitGeneration;
 
     public Text scoreText;
 
@@ -93,61 +98,131 @@ public class LevelGeneration : MonoBehaviour
     // Generate next track piece
     private void GenerateRandomTrack()
     {
-        // Make a list of possible tracks to generate (possible tracks depend on current track weight)
-        List<GameObject> possibleTracks = new List<GameObject>();
-
-        // Add the tracks that can be generated
-        if (currentWeight <= 1)
+        if (splitReturnTrack)
         {
-            foreach (TrackPiece piece in trackPieces)
+            GameObject st = Instantiate(splitReturnTrack, localEndLocation.position, localEndLocation.rotation);
+
+            AddTrack(st);
+
+            splitReturnTrack = null;
+
+            // If there are not enough generated tracks, then generate the next track
+            if (spawnedTracks.Count < numberOfTracks)
             {
-                if (piece.trackWeight > 0 && piece.trackWeight <= 3)
+                if (st && st.GetComponent<TrackPiece>() && !st.GetComponent<TrackPiece>().generateBackwards)
                 {
-                    possibleTracks.Add(piece.trackPiece);
+                    Invoke("GenerateRandomTrack", 0.1f);
                 }
             }
         }
-        else if (currentWeight == 2)
+        else
         {
-            foreach (TrackPiece piece in trackPieces)
+            // Make a list of possible tracks to generate (possible tracks depend on current track weight)
+            List<GameObject> possibleTracks = new List<GameObject>();
+
+            // Add the tracks that can be generated
+            if (currentWeight <= 1)
             {
-                if (piece.trackWeight >= 0 && piece.trackWeight < 2)
+                foreach (TrackPiece piece in trackPieces)
                 {
-                    possibleTracks.Add(piece.trackPiece);
+                    if (piece.trackWeight > 0 && piece.trackWeight <= 3)
+                    {
+                        possibleTracks.Add(piece.trackPiece);
+                    }
                 }
             }
-        }
-        else if (currentWeight > 2)
-        {
-            foreach (TrackPiece piece in trackPieces)
+            else if (currentWeight == 2)
             {
-                if (piece.trackWeight <= 1)
+                foreach (TrackPiece piece in trackPieces)
                 {
-                    possibleTracks.Add(piece.trackPiece);
+                    if (piece.trackWeight >= 0 && piece.trackWeight < 2)
+                    {
+                        possibleTracks.Add(piece.trackPiece);
+                    }
                 }
             }
-        }
-
-        // Generate a random track from the possible tracks
-        int randomTrackIndex = Random.Range(0, possibleTracks.Count);
-        Transform spawnPoint = spawnedTracks[spawnedTracks.Count - 1].GetComponent<TrackPiece>().endLocation;
-
-        GameObject spawnTrack = Instantiate(possibleTracks[randomTrackIndex], spawnPoint.position, spawnPoint.rotation);
-
-        AddTrack(spawnTrack);
-
-        // Check to see if the piece generates backwards
-        if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && spawnTrack.GetComponent<TrackPiece>().generateBackwards)
-        {
-            generateBackwards = true;
-        }
-
-        // If there are not enough generated tracks, then generate the next track
-        if (spawnedTracks.Count < numberOfTracks)
-        {
-            if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && !spawnTrack.GetComponent<TrackPiece>().generateBackwards)
+            else if (currentWeight > 2)
             {
-                Invoke("GenerateRandomTrack", 0.1f);
+                foreach (TrackPiece piece in trackPieces)
+                {
+                    if (piece.trackWeight <= 1)
+                    {
+                        possibleTracks.Add(piece.trackPiece);
+                    }
+                }
+            }
+
+            // Generate a random track from the possible tracks
+            int randomTrackIndex = Random.Range(0, possibleTracks.Count);
+            Transform spawnPoint = spawnedTracks[spawnedTracks.Count - 1].GetComponent<TrackPiece>().endLocation[0];
+
+            GameObject spawnTrack = Instantiate(possibleTracks[randomTrackIndex], spawnPoint.position, spawnPoint.rotation);
+
+            AddTrack(spawnTrack);
+
+            // Check to see if the piece generates backwards
+            if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && spawnTrack.GetComponent<TrackPiece>().generateBackwards)
+            {
+                generateBackwards = true;
+            }
+
+            // Check to see if the piece is a split track
+            if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && spawnTrack.GetComponent<TrackPiece>().splitTrack)
+            {
+                List<GameObject> posTracks = new List<GameObject>();
+
+                foreach (TrackPiece tp in trackPieces)
+                {
+                    if (tp.GetComponent<TrackPiece>().isStright)
+                    {
+                        posTracks.Add(tp.trackPiece);
+                    }
+                }
+
+                GameObject previousTrack = null;
+
+                foreach (Transform endlocation in spawnTrack.GetComponent<TrackPiece>().endLocation)
+                {
+                    for (int i = 1; i < numberOfTracksPerSplit; i++)
+                    {
+                        int rand = Random.Range(0, posTracks.Count);
+
+                        if (i == 1)
+                        {
+                            previousTrack = Instantiate(posTracks[rand], endlocation.position, endlocation.rotation);
+                        }
+                        else
+                        {
+                            previousTrack = Instantiate(posTracks[rand], previousTrack.GetComponent<TrackPiece>().endLocation[0].position, previousTrack.GetComponent<TrackPiece>().endLocation[0].rotation);
+                        }
+
+                        spawnedSplitTracks.Add(previousTrack);
+
+                        Debug.Log("Spawn Split track numb " + i + " / " + numberOfTracksPerSplit);
+                    }
+                }
+
+                if (previousTrack.GetComponent<TrackPiece>().splitTrackEndPiece)
+                {
+                    splitReturnTrack = previousTrack.GetComponent<TrackPiece>().splitTrackEndPiece;
+                }
+                else
+                {
+                    int rand = Random.Range(0, posTracks.Count);
+
+                    splitReturnTrack = posTracks[rand];
+
+                    localEndLocation = splitReturnTrack.GetComponent<TrackPiece>().endLocation[0];
+                }
+            }
+
+            // If there are not enough generated tracks, then generate the next track
+            if (spawnedTracks.Count < numberOfTracks)
+            {
+                if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && !spawnTrack.GetComponent<TrackPiece>().generateBackwards)
+                {
+                    Invoke("GenerateRandomTrack", 0.1f);
+                }
             }
         }
     }
@@ -209,19 +284,7 @@ public class LevelGeneration : MonoBehaviour
             {
                 generateBackwards = false;
 
-                List<GameObject> otherTracks = new List<GameObject>();
-                otherTracks = spawnedTracks;
-
-                // Despawn all previous tracks
-                foreach (GameObject otherTrack in otherTracks)
-                {
-                    if (!otherTrack.GetComponent<TrackPiece>().generateBackwards)
-                    {
-                        Destroy(otherTrack);
-                    }
-                }
-
-                spawnedTracks.Clear();
+                ClearTracks();
 
                 spawnedTracks.Add(track);
                 currentNumberOfTracks = 1;
@@ -247,16 +310,7 @@ public class LevelGeneration : MonoBehaviour
     // Restart Game
     public void RestartGame()
     {
-        List<GameObject> otherTracks = new List<GameObject>();
-        otherTracks = spawnedTracks;
-
-        // Despawn all previous tracks
-        foreach (GameObject otherTrack in otherTracks)
-        {
-            Destroy(otherTrack);
-        }
-
-        spawnedTracks.Clear();
+        ClearTracks();
 
         currentNumberOfBackTracks = 0;
         currentNumberOfTracks = 0;
@@ -269,5 +323,30 @@ public class LevelGeneration : MonoBehaviour
         AddScore(0);
 
         StartGeneration();
+    }
+
+    // Clear track lists
+    void ClearTracks()
+    {
+        List<GameObject> otherTracks = new List<GameObject>();
+        otherTracks = spawnedTracks;
+
+        // Despawn all previous tracks
+        foreach (GameObject otherTrack in otherTracks)
+        {
+            Destroy(otherTrack);
+        }
+
+        List<GameObject> otherSplitTracks = new List<GameObject>();
+        otherSplitTracks = spawnedSplitTracks;
+
+        // Despawn all previous split tracks
+        foreach (GameObject otherTrack in otherSplitTracks)
+        {
+            Destroy(otherTrack);
+        }
+
+        spawnedTracks.Clear();
+        spawnedSplitTracks.Clear();
     }
 }
