@@ -10,6 +10,8 @@ public class LevelGeneration : MonoBehaviour
     private GameObject currentTrack;
     private GameObject splitReturnTrack;
 
+    private ConsecutiveTrack conTrack = new ConsecutiveTrack();
+
     public Transform trackStartLocation;
     public Transform playerStartLocation;
     private Transform localEndLocation;
@@ -115,6 +117,18 @@ public class LevelGeneration : MonoBehaviour
                 }
             }
         }
+        else if (conTrack.HasConsecutiveTrack())
+        {
+            GameObject spawnTrack = Instantiate(conTrack.GetConsecutiveTrack(), conTrack.GetSpawnLocation().position, conTrack.GetSpawnLocation().rotation);
+
+            AddTrack(spawnTrack);
+
+            conTrack.ClearConsecutiveTrack();
+
+            Debug.Log("Con Track");
+
+            generateBackwards = true;
+        }
         else
         {
             // Make a list of possible tracks to generate (possible tracks depend on current track weight)
@@ -216,6 +230,12 @@ public class LevelGeneration : MonoBehaviour
                 }
             }
 
+            if (spawnTrack && spawnTrack.GetComponent<TrackPiece>() && spawnTrack.GetComponent<TrackPiece>().consecutiveTrack)
+            {
+                conTrack.SetConsecutiveTrack(spawnTrack.GetComponent<TrackPiece>().consecutiveTrack);
+                conTrack.SetSpawnLocation(spawnTrack.GetComponent<TrackPiece>().endLocation[0]);
+            }
+
             // If there are not enough generated tracks, then generate the next track
             if (spawnedTracks.Count < numberOfTracks)
             {
@@ -284,7 +304,7 @@ public class LevelGeneration : MonoBehaviour
             {
                 generateBackwards = false;
 
-                ClearTracks();
+                ClearTracks(false);
 
                 spawnedTracks.Add(track);
                 currentNumberOfTracks = 1;
@@ -310,7 +330,7 @@ public class LevelGeneration : MonoBehaviour
     // Restart Game
     public void RestartGame()
     {
-        ClearTracks();
+        ClearTracks(true);
 
         currentNumberOfBackTracks = 0;
         currentNumberOfTracks = 0;
@@ -326,7 +346,7 @@ public class LevelGeneration : MonoBehaviour
     }
 
     // Clear track lists
-    void ClearTracks()
+    void ClearTracks(bool removeBackwardsTrack)
     {
         List<GameObject> otherTracks = new List<GameObject>();
         otherTracks = spawnedTracks;
@@ -334,7 +354,21 @@ public class LevelGeneration : MonoBehaviour
         // Despawn all previous tracks
         foreach (GameObject otherTrack in otherTracks)
         {
-            Destroy(otherTrack);
+            if (!removeBackwardsTrack)
+            {
+                if (otherTrack.GetComponent<TrackPiece>().trackHealth <= 1)
+                {
+                    Destroy(otherTrack);
+                }
+                else
+                {
+                    otherTrack.GetComponent<TrackPiece>().trackHealth--;
+                }
+            }
+            else
+            {
+                Destroy(otherTrack);
+            }
         }
 
         List<GameObject> otherSplitTracks = new List<GameObject>();
